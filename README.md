@@ -1,151 +1,219 @@
-markdown
 # Warehouse API
 
 ## Project Description
-The Warehouse API is a Spring Boot application for managing products in a warehouse. It provides RESTful endpoints for creating, reading, updating, and deleting products, as well as managing inventory by increasing or decreasing stock quantities. The application uses MongoDB as the database and includes input validation, error handling, and unit tests for stock operations. A bonus feature allows querying products below a low stock threshold.
 
-Key features:
-- **Product Management**: CRUD operations for products (name, description, stock quantity, low stock threshold).
-- **Inventory Management**: Endpoints to add or remove stock, preventing negative quantities and handling overflow.
-- **List Products with low stock**: Endpoint to list products with stock below a defined threshold when enabled.
-- **Unit Tests**: Comprehensive tests for stock addition and removal, covering edge cases like insufficient stock or invalid inputs.
+The Warehouse API is a RESTful service built with Spring Boot and MongoDB to manage products in a warehouse inventory system. It supports CRUD operations for products, stock updates (add/decrease), and retrieval of products below their low stock threshold. The application is containerized with Docker, includes automatic data seeding for development, and provides comprehensive error handling and logging. Key features include:
+
+- Create, read, update, and delete products.
+- Add or decrease stock for products.
+- Retrieve products with low stock based on configurable thresholds.
+- Input validation and proper HTTP status codes (e.g., 400 for invalid requests, 404 for not found).
+- Automatic seeding of sample data in the development environment.
+
+The project is designed for reliability, maintainability, and ease of testing, with a focus on clean code and REST API best practices.
 
 ## Setup and Run Instructions
-### Prerequisites
-- **Java 17**: Ensure JDK 17 is installed.
-- **Docker**: Required for containerized deployment.
-- **MongoDB**: Can be run via Docker Compose or as a standalone instance.
-- **Gradle** (or Maven): For building the project.
 
-### Steps to Set Up and Run Locally
+### Prerequisites
+- **Docker**: Ensure Docker and Docker Compose are installed (`docker --version` and `docker-compose --version`).
+- **Java 17**: Required for building the project locally (optional if using Docker).
+- **Gradle**: Required for building the project locally (optional if using Docker).
+- **Git**: To clone the repository.
+
+### Steps to Run Locally
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/warehouse-api.git
+   git clone https://github.com/aayush-kumar-2310/warehouse-api.git
    cd warehouse-api
    ```
 
-2. **Build the Project**:
-   - Using Maven:
-     ```bash
-     mvn clean package
-     ```
-   - Using Gradle:
-     ```bash
-     ./gradlew build
-     ```
+2. **Run with Docker Compose** (Recommended):
+    - Ensure Docker is running.
+    - Build and start the application and MongoDB:
+      ```bash
+      docker-compose up -d
+      ```
+    - Verify services are running:
+      ```bash
+      docker-compose ps
+      ```
+      Ensure `warehouse-api_app_1` and `warehouse-api_mongo_1` are in the `Up` state.
+    - The application runs on `http://localhost:8080`.
 
-3. **Run with Docker Compose** (recommended, includes MongoDB):
-   ```bash
-   docker-compose up -d
-   ```
-   - This starts the application on `http://localhost:8080` and MongoDB on `localhost:27017`.
-   - Verify the application is running:
-     ```bash
-     curl http://localhost:8080/actuator/health
-     ```
-     Expected output: `{"status": "UP"}`
+3. **Verify Application**:
+    - Check the health endpoint:
+      ```bash
+      curl http://localhost:8080/actuator/health
+      ```
+      Expected: `{"status":"UP"}`
+    - View logs:
+      ```bash
+      docker-compose logs app
+      ```
 
-4. **Run Without Docker** (requires a local MongoDB instance):
-   - Start MongoDB locally (e.g., `mongod --dbpath /path/to/db`).
-   - Configure `src/main/resources/application.properties` with your MongoDB URI:
-     ```properties
-     spring.data.mongodb.uri=mongodb://localhost:27017/verto
-     ```
-   - Run the application:
-     - Maven: `mvn spring-boot:run`
-     - Gradle: `./gradlew bootRun`
-
-5. **Test Endpoints**:
-   Use Postman or curl to interact with the API. Examples:
-   - **Create Product**:
-     ```bash
-     curl -X POST http://localhost:8080/product/create \
-       -H "Content-Type: application/json" \
-       -d '{"productName":"Laptop","productDesc":"High-performance laptop","availableQty":10,"enableLowStockThreshold":true,"lowStockThreshold":5}'
-     ```
-   - **Get Product**: `curl http://localhost:8080/product/{id}`
-   - **Update Product**:
-     ```bash
-     curl -X PUT http://localhost:8080/product/update \
-       -H "Content-Type: application/json" \
-       -d '{"productId":"{id}","productName":"Updated Laptop","productDesc":"Updated description","availableQty":15,"enableLowStockThreshold":true,"lowStockThreshold":5}'
-     ```
-   - **Delete Product**: `curl -X DELETE http://localhost:8080/product/{id}`
-   - **Get All Products**: `curl http://localhost:8080/product/all`
-   - **Add Stock**:
-     ```bash
-     curl -X POST http://localhost:8080/inventory/{productId}/add-stock \
-       -H "Content-Type: application/json" \
-       -d '{"amount":5}'
-     ```
-   - **Decrease Stock**:
-     ```bash
-     curl -X POST http://localhost:8080/inventory/{productId}/decrease-stock \
-       -H "Content-Type: application/json" \
-       -d '{"amount":3}'
-     ```
-   - **Get Low Stock Products**: `curl http://localhost:8080/product/low-stock`
-
-6. **Stop Containers** (if using Docker Compose):
-   ```bash
-   docker-compose down
-   ```
+4. **Stop the Application**:
+    - With Docker:
+      ```bash
+      docker-compose down
+      ```
+      To clear MongoDB data:
+      ```bash
+      docker-compose down -v
+      ```
 
 ## Running Test Cases
-Unit tests are provided for the inventory logic (`InventoryServiceImpl`), covering stock addition and removal, including edge cases like insufficient stock or invalid inputs.
 
-### Prerequisites
-- Gradle installed.
-- JUnit 5 and Mockito dependencies (included in `pom.xml` or `build.gradle`).
+### Unit Tests
+The project includes unit tests for controllers, services, and repositories using JUnit and Mockito.
 
-### Steps to Run Tests
-1. **Build and Run Tests**:
-   - Using Gradle:
-     ```bash
-     ./gradlew test
-     ```
+1. **Run Unit Tests**:
+   ```bash
+   ./gradlew clean test
+   ```
+2. **View Results**:
+    - Test reports are generated in `build/reports/tests/test/index.html`.
+    - Tests cover:
+        - Product creation with validation (e.g., duplicate names, invalid fields).
+        - Stock operations (add/decrease, insufficient stock).
+        - Low stock queries.
+        - Error handling (400, 404 responses).
 
-2. **Verify Test Results**:
-   - Tests are located in `src/test/java/org/aayush/service/impl/InventoryServiceImplTest.java`.
-   - The test suite includes:
-     - Successful stock addition/removal.
-     - Handling of null/empty product IDs.
-     - Handling of null/non-positive stock amounts.
-     - Edge cases: exceeding `Integer.MAX_VALUE` for stock addition, removing more stock than available.
-   - Check the console or test report (e.g., `target/surefire-reports` for Maven) for results.
+### Manual Testing with curl
+The application seeds 5 sample products in the `dev` profile (see Sample Data below). Use the following `curl` commands to test all endpoints. Replace `{id1}`, `{id2}`, etc., with `productId` values from:
+```bash
+curl http://localhost:8080/product/all
+```
+
+#### Sample Data
+The `dev` profile seeds:
+1. **Laptop Pro**: 50 units, threshold enabled (20).
+2. **Smartphone X**: 5 units, threshold enabled (10).
+3. **Wireless Headphones**: 0 units, threshold enabled (5).
+4. **Monitor 4K**: 100 units, threshold disabled.
+5. **Keyboard Mechanical**: 25 units, threshold disabled.
+
+#### Test Commands
+1. **GET /product/{id}** (Retrieve a product):
+   ```bash
+   curl http://localhost:8080/product/{id1}
+   ```
+   **Expected**: 200 OK, JSON for "Laptop Pro".
+    - Non-existent ID:
+      ```bash
+      curl http://localhost:8080/product/invalid123
+      ```
+      **Expected**: 404 Not Found, `{"errorCode":"PRODUCT_NOT_FOUND","message":"Product not found: invalid123"}`.
+
+2. **POST /product/create** (Create a product):
+   ```bash
+   curl -X POST http://localhost:8080/product/create \
+     -H "Content-Type: application/json" \
+     -d '{"productName":"Tablet","productDesc":"Portable tablet","availableQty":30,"enableLowStockThreshold":true,"lowStockThreshold":10}'
+   ```
+   **Expected**: 200 OK, new product JSON.
+    - Duplicate name:
+      ```bash
+      curl -X POST http://localhost:8080/product/create \
+        -H "Content-Type: application/json" \
+        -d '{"productName":"Laptop Pro","productDesc":"Duplicate","availableQty":10}'
+      ```
+      **Expected**: 400 Bad Request, `{"errorCode":"INVALID_PRODUCT","message":"Product with the same name already exists"}`.
+
+3. **PUT /product/update** (Update a product):
+   ```bash
+   curl -X PUT http://localhost:8080/product/update \
+     -H "Content-Type: application/json" \
+     -d '{"productId":"{id4}","productName":"Monitor 4K Ultra","productDesc":"Updated Ultra HD monitor","availableQty":90,"enableLowStockThreshold":false}'
+   ```
+   **Expected**: 200 OK, updated product.
+    - Non-existent ID:
+      ```bash
+      curl -X PUT http://localhost:8080/product/update \
+        -H "Content-Type: application/json" \
+        -d '{"productId":"invalid123","productName":"Invalid","productDesc":"Desc","availableQty":10}'
+      ```
+      **Expected**: 404 Not Found.
+
+4. **DELETE /product/{id}** (Delete a product):
+   ```bash
+   curl -X DELETE http://localhost:8080/product/{id5}
+   ```
+   **Expected**: 204 No Content.
+    - Non-existent ID:
+      ```bash
+      curl -X DELETE http://localhost:8080/product/invalid123
+      ```
+      **Expected**: 404 Not Found.
+
+5. **GET /product/all** (List all products):
+   ```bash
+   curl http://localhost:8080/product/all
+   ```
+   **Expected**: 200 OK, array of products.
+
+6. **POST /inventory/{productId}/add-stock** (Add stock):
+   ```bash
+   curl -X POST http://localhost:8080/inventory/{id2}/add-stock \
+     -H "Content-Type: application/json" \
+     -d '{"amount":10}'
+   ```
+   **Expected**: 200 OK, `availableQty`: 15.
+    - Non-existent ID:
+      ```bash
+      curl -X POST http://localhost:8080/inventory/invalid123/add-stock \
+        -H "Content-Type: application/json" \
+        -d '{"amount":5}'
+      ```
+      **Expected**: 404 Not Found.
+
+7. **POST /inventory/{productId}/decrease-stock** (Decrease stock):
+   ```bash
+   curl -X POST http://localhost:8080/inventory/{id1}/decrease-stock \
+     -H "Content-Type: application/json" \
+     -d '{"amount":10}'
+   ```
+   **Expected**: 200 OK, `availableQty`: 40.
+    - Insufficient stock:
+      ```bash
+      curl -X POST http://localhost:8080/inventory/{id2}/decrease-stock \
+        -H "Content-Type: application/json" \
+        -d '{"amount":10}'
+      ```
+      **Expected**: 400 Bad Request, `{"errorCode":"INSUFFICIENT_STOCK","message":"Insufficient stock available. Requested: 10, Available: 5"}`.
+
+8. **GET /product/low-stock** (List low stock products):
+   ```bash
+   curl http://localhost:8080/product/low-stock
+   ```
+   **Expected**: 200 OK, array with `Smartphone X` and `Wireless Headphones`.
 
 ## Assumptions and Design Choices
-- **Architecture**:
-  - The application follows a layered architecture (controllers, services, repositories) for separation of concerns.
-  - Controllers handle input validation and HTTP responses, while services contain all business logic.
-  - Repositories interact with MongoDB using Spring Data MongoDB.
-- **Database**:
-  - MongoDB is used for its flexibility with document-based data, suitable for product information.
-  - The database is assumed to be available at `mongodb://localhost:27017/verto` or via Docker Compose.
-- **Error Handling**:
-  - Standard Java exceptions (`IllegalArgumentException`, `RuntimeException`) are used instead of custom exceptions for simplicity.
-  - Controllers return consistent error responses with HTTP status codes (400 for invalid inputs, 404 for not found).
-- **Security**:
-  - No authentication/authorization is implemented, as per requirements.
-  - The Dockerfile runs as a non-root user for security.
-- **Dockerization**:
-  - A multi-stage Dockerfile is used to build the JAR and create a lightweight runtime image.
-  - Docker Compose simplifies running the application with MongoDB.
-  - The Spring Boot Actuator `/actuator/health` endpoint is included for health checks.
-- **Testing**:
-  - Unit tests focus on `InventoryServiceImpl` to verify stock logic, using Mockito to mock the repository layer.
-  - Edge cases (e.g., insufficient stock, integer overflow) are explicitly tested.
-- **Assumptions**:
-  - The evaluator has Docker and a build tool (Maven/Gradle) installed.
-  - MongoDB is accessible, either via Docker Compose or a local instance.
-  - The application runs on port 8080 by default, configurable via environment variables.
-  - Input validation assumes non-null, non-negative quantities and valid strings for product names/descriptions.
 
-## Dependencies
-- Spring Boot (Web, Data MongoDB, Actuator)
-- Lombok (for boilerplate reduction)
-- Jakarta Validation API (for input validation)
-- JUnit 5 and Mockito (for unit tests)
-- MongoDB
-- Docker
-```
+- **MongoDB**: Used as the database for its flexibility with unstructured data and scalability. The `products` collection stores product details with fields: `productId`, `productName`, `productDesc`, `availableQty`, `enableLowStockThreshold`, `lowStockThreshold`.
+- **Error Handling**: Uses standard HTTP status codes:
+    - `200 OK`: Successful operations.
+    - `204 No Content`: Successful deletion.
+    - `400 Bad Request`: Invalid inputs (e.g., empty ID, duplicate name, insufficient stock).
+    - `404 Not Found`: Non-existent product IDs.
+    - Error responses include `errorCode` (e.g., `PRODUCT_NOT_FOUND`, `INVALID_REQUEST`, `INSUFFICIENT_STOCK`) and `message`.
+- **Data Seeding**: In the `dev` profile, a `CommandLineRunner` (`DataInitializer`) clears the database and seeds 5 sample products to simplify testing. Disabled in other profiles to avoid affecting production data.
+- **Low Stock Threshold**: The `enableLowStockThreshold` field controls whether a product is checked for low stock. When `false`, `lowStockThreshold` is ignored, and the field is optional in requests for clarity.
+- **Low Stock Query**: The `/product/low-stock` endpoint uses MongoDB’s `$expr` to compare `availableQty` with `lowStockThreshold` for products with `enableLowStockThreshold: true`.
+- **No Custom Exceptions**: Relies on `RuntimeException` and `IllegalArgumentException` with message checks for simplicity, avoiding custom exception classes.
+- **Docker**: Uses `docker-compose.yml` to run the application and MongoDB with health checks for reliability.
+- **Logging**: SLF4J with Logback provides detailed logs at the `DEBUG` level for troubleshooting.
+- **Validation**: Uses Bean Validation (`@Valid`) for request DTOs to enforce constraints (e.g., non-null fields, positive stock amounts).
+
+## Known Limitations
+- The `/product/low-stock` query uses `$expr`, which may have performance implications for very large datasets. A future improvement could index relevant fields.
+- No authentication/authorization, as it’s a demo API. Production systems would require security (e.g., OAuth2).
+- Data seeding clears the database in `dev` mode, which may not suit all testing scenarios. If it is not required, it can be safely removed from ```DataInitializer``` class.
+
+## Future Improvements
+- Add pagination to `/product/all` and `/product/low-stock` for scalability.
+- Implement global exception handling with for consistency.
+- Add more robust input validation (e.g., regex for `productId` format).
+
+---
+
+**GitHub Repository**: [https://github.com/yourusername/warehouse-api](https://github.com/aayush-kumar-2310/warehouse-api)

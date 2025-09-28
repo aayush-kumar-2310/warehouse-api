@@ -5,12 +5,16 @@ import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.aayush.models.Product;
 import org.aayush.repository.ProductRepo;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -78,10 +82,15 @@ public class ProductRepoImpl implements ProductRepo {
     @Override
     public List<Product> findProductsBelowThreshold() {
         log.info("Fetching products below low stock threshold");
-        Query query = new Query();
-        query.addCriteria(Criteria.where("enableLowStockThreshold").is(true)
-                .and("availableQty").lt("$lowStockThreshold"));
-        return mongoTemplate.find(query, Product.class);
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("enableLowStockThreshold").is(true)),
+                Aggregation.match(Criteria.expr(
+                        ComparisonOperators.Lt.valueOf("$availableQty").lessThan("$lowStockThreshold")
+                ))
+        );
+        return mongoTemplate.aggregate(aggregation, Product.class, Product.class)
+                .getMappedResults();
     }
 
     @Override
