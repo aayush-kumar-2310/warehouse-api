@@ -92,6 +92,18 @@ The `dev` profile seeds:
 4. **Monitor 4K**: 100 units, threshold disabled.
 5. **Keyboard Mechanical**: 25 units, threshold disabled.
 
+#### Quick Setup with Postman Collection
+A complete Postman collection is available at: `Warehouse-API-Verto.postman_collection.json`
+
+**To use the collection:**
+1. Copy the contents of `Warehouse-API-Verto.postman_collection.json`
+2. Open Postman → Import → Raw text
+3. Paste the collection JSON and import
+4. All endpoints will be available with pre-configured requests
+
+This saves you from manually copying and pasting each curl command individually.
+
+
 #### Test Commands
 1. **GET /product/{id}** (Retrieve a product):
    ```bash
