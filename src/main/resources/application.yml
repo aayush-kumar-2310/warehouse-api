@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://mongo:27017/verto
+      type-key: ""
+
+logging:
+  level:
+    org.aayush: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

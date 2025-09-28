@@ -49,7 +49,7 @@ Key features:
    - Start MongoDB locally (e.g., `mongod --dbpath /path/to/db`).
    - Configure `src/main/resources/application.properties` with your MongoDB URI:
      ```properties
-     spring.data.mongodb.uri=mongodb://localhost:27017/warehouse
+     spring.data.mongodb.uri=mongodb://localhost:27017/verto
      ```
    - Run the application:
      - Maven: `mvn spring-boot:run`
